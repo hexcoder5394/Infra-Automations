@@ -28,3 +28,23 @@ variable "azurerm_subnet_data" {
   default = "sub-data"
 }
 
+
+variable "azurerm_network_security_group_web" {
+  description = "NSG-Web"
+  type        = string
+  default     = "NSG-Web"
+}
+
+variable "azurerm_network_security_group_app" {
+  description = "NSG-app"
+  type        = string
+  default     = "NSG-app"
+}
+
+variable "azurerm_network_security_group_data" {
+  description = "NSG-data"
+  type        = string
+  default     = "NSG-data"
+}
+
+
