@@ -13,7 +13,8 @@ It mimics a real-world corporate environment where resources are segmented by re
 The infrastructure is designed with a "Defense in Depth" approach:
 
 ![Architecture Diagram](./architecture-diagram.png)
-*(Note: Replace this with a screenshot of your diagram from Draw.io or similar)*
+<img width="597" height="327" alt="image" src="https://github.com/user-attachments/assets/19b7f9f1-9da9-4f2a-ad68-9a85e2050231" />
+
 
 ### The Three Tiers
 1.  **Web Tier (Public):**
