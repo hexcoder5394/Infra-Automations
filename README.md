@@ -43,5 +43,5 @@ The infrastructure is designed with a "Defense in Depth" approach:
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/your-username/azure-3tier-terraform.git](https://github.com/your-username/azure-3tier-terraform.git)
+git clone [https://github.com/hexcoder5394/Infra-Automations.git)
 cd azure-3tier-terraform
