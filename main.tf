@@ -45,14 +45,14 @@ resource "azurerm_subnet" "subnet-app" {
   resource_group_name  = var.azurerm_resource_group
   virtual_network_name = var.azurerm_virtual_network
   address_prefixes     = ["10.0.2.0/24"]
-}  
+}
 
 resource "azurerm_subnet" "subnet-data" {
   name                 = var.azurerm_subnet_data
   resource_group_name  = var.azurerm_resource_group
   virtual_network_name = var.azurerm_virtual_network
   address_prefixes     = ["10.0.3.0/24"]
-}  
+}
 
 resource "azurerm_network_security_group" "nsg-web" {
   name                = var.azurerm_network_security_group_web
@@ -104,6 +104,103 @@ resource "azurerm_network_security_group" "nsg-data" {
     source_port_range          = "*"
     destination_port_range     = "8080"
     source_address_prefix      = "10.0.2.0/24"
-    destination_address_prefix = "10.0.3.0/24" 
+    destination_address_prefix = "10.0.3.0/24"
   }
+}
+
+resource "azurerm_public_ip" "ipinfra" {
+  name                = var.azurerm_public_ip_infra
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  allocation_method = "Static"
+  sku               = "Standard"
+
+}
+
+resource "azurerm_network_interface" "nic-web" {
+  name                = var.azurerm_network_interface_web
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.subnet-web.id
+    private_ip_address_allocation = "Dynamic"
+  }
+
+}
+
+resource "azurerm_network_interface_security_group_association" "nic-web-nsg" {
+  network_interface_id      = azurerm_network_interface.nic-web.id
+  network_security_group_id = azurerm_network_security_group.nsg-web.id
+}
+
+
+resource "azurerm_linux_virtual_machine" "linux-vm" {
+  name                = var.azurerm_linux_virtual_machine_linux
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  size                = "Standard_D2s_v3"
+  admin_username      = "adminuser"
+  network_interface_ids = [
+    azurerm_network_interface.nic-web.id,
+  ]
+
+  admin_password                  = "Password__123"
+  disable_password_authentication = false
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "24.04.202404230"
+  }
+}
+
+resource "azurerm_lb" "lb_infra" {
+  name                = var.azurerm_lb_infra
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "Standard"
+
+  frontend_ip_configuration {
+    name                 = "LoadBalancerFrontEnd"
+    public_ip_address_id = azurerm_public_ip.ipinfra.id
+  }
+
+}
+
+resource "azurerm_lb_backend_address_pool" "backend_pool" {
+  name            = "backend-pool"
+  loadbalancer_id = azurerm_lb.lb_infra.id
+}
+
+resource "azurerm_lb_probe" "health_probe_infra" {
+  name            = var.health_probe_lb
+  loadbalancer_id = azurerm_lb.lb_infra.id
+  protocol        = "Tcp"
+  port            = 80
+}
+
+resource "azurerm_lb_rule" "lb_rule" {
+  name                           = var.lb_rule_infra
+  loadbalancer_id                = azurerm_lb.lb_infra.id
+  protocol                       = "Tcp"
+  frontend_port                  = 80
+  backend_port                   = 80
+  frontend_ip_configuration_name = "LoadBalancerFrontEnd"
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.backend_pool.id]
+  probe_id                       = azurerm_lb_probe.health_probe_infra.id
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "vm_pool" {
+  network_interface_id    = azurerm_network_interface.nic-web.id
+  ip_configuration_name   = "internal"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.backend_pool.id
 }

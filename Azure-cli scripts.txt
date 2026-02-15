@@ -1,0 +1,53 @@
+Get the location and machine image details via Azure cli
+_________________________________________________________
+
+
+$location  = "japanwest"
+$publisher = "Canonical"
+
+$result = @()
+
+# Get available VM sizes in region
+$sizes = Get-AzComputeResourceSku -Location $location | Select-Object Name
+
+# Get Ubuntu offers
+$offers = Get-AzVMImageOffer -Location $location -PublisherName $publisher |
+          Where-Object { $_.Offer -like "*ubuntu*" }
+
+foreach ($offer in $offers) {
+
+    $skus = Get-AzVMImageSku -Location $location `
+                             -PublisherName $publisher `
+                             -Offer $offer.Offer
+
+    foreach ($sku in $skus) {
+
+        $versions = Get-AzVMImage -Location $location `
+                                  -PublisherName $publisher `
+                                  -Offer $offer.Offer `
+                                  -Skus $sku.Skus
+
+        foreach ($version in $versions) {
+
+            foreach ($size in $sizes) {
+
+                $result += [PSCustomObject]@{
+                    Publisher = $publisher
+                    Offer     = $offer.Offer
+                    SKU       = $sku.Skus
+                    Version   = $version.Version
+                    VMSize    = $size.Name
+                }
+            }
+        }
+    }
+}
+
+$result | Export-Csv "UbuntuImagesWithSizes.csv" -NoTypeInformation
+
+
+Get the available sizes for a specific region:
+----------------------------------------------
+
+az vm list-skus --location japanwest --size Standard_D2ls --all --output table
+

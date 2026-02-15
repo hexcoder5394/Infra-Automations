@@ -24,8 +24,8 @@ variable "azurerm_subnet_app" {
 
 variable "azurerm_subnet_data" {
   description = "sub-data"
-  type = string
-  default = "sub-data"
+  type        = string
+  default     = "sub-data"
 }
 
 
@@ -47,4 +47,39 @@ variable "azurerm_network_security_group_data" {
   default     = "NSG-data"
 }
 
+variable "azurerm_public_ip_infra" {
+  description = "ip-infra"
+  type        = string
+  default     = "ip-infra"
+}
+
+variable "azurerm_network_interface_web" {
+  description = "nic-web"
+  type        = string
+  default     = "nic-web"
+}
+
+variable "azurerm_linux_virtual_machine_linux" {
+  description = "Linux VM"
+  type        = string
+  default     = "linux-vm"
+}
+
+variable "azurerm_lb_infra" {
+  description = "lb-infra"
+  type        = string
+  default     = "lb-infra"
+}
+
+variable "health_probe_lb" {
+  description = "backend-health-probe"
+  type        = string
+  default     = "backend-health-probe"
+}
+
+variable "lb_rule_infra" {
+  description = "lb-rule-infra"
+  type        = string
+  default     = "lb-rule-infra"
+}
 
