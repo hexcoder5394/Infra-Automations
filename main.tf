@@ -204,3 +204,49 @@ resource "azurerm_network_interface_backend_address_pool_association" "vm_pool" 
   ip_configuration_name   = "internal"
   backend_address_pool_id = azurerm_lb_backend_address_pool.backend_pool.id
 }
+
+resource "azurerm_mssql_server" "infra-sql_server" {
+  name                         = "infra-sql-server-v2"
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = "japaneast"
+  version                      = "12.0"
+  administrator_login          = "dbmaster"
+  administrator_login_password = "Password__123"
+}
+
+resource "azurerm_mssql_database" "infra_sql_database" {
+  name      = var.infra_sql_database
+  server_id = azurerm_mssql_server.infra-sql_server.id
+  sku_name  = "Basic"
+}
+
+resource "azurerm_private_dns_zone" "sql_dns" {
+  name                = "private.sql.database.azure.com"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "sql_dns_link" {
+  name                  = "sql-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.sql_dns.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+resource "azurerm_private_endpoint" "sql_private_endpoint" {
+  name                = var.sql_private_endpoint
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  subnet_id           = azurerm_subnet.subnet-data.id
+
+  private_service_connection {
+    name                           = "sql-private-service-connection"
+    private_connection_resource_id = azurerm_mssql_server.infra-sql_server.id
+    is_manual_connection           = false
+    subresource_names              = ["sqlServer"]
+  }
+
+  private_dns_zone_group {
+    name                 = "sql_dns_aone_group"
+    private_dns_zone_ids = [azurerm_private_dns_zone.sql_dns.id]
+  }
+}

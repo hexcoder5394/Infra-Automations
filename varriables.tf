@@ -83,3 +83,15 @@ variable "lb_rule_infra" {
   default     = "lb-rule-infra"
 }
 
+variable "infra_sql_database" {
+  description = "infra_sql_database"
+  type        = string
+  default     = "infra_sql_database"
+}
+
+variable "sql_private_endpoint" {
+  description = "sql_private_endpoint"
+  type        = string
+  default     = "sql_private_endpoint"
+}
+
