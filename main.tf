@@ -161,6 +161,8 @@ resource "azurerm_linux_virtual_machine" "linux-vm" {
     sku       = "server"
     version   = "24.04.202404230"
   }
+
+  custom_data = filebase64("init.sh")
 }
 
 resource "azurerm_lb" "lb_infra" {
