@@ -66,7 +66,7 @@ resource "azurerm_network_security_group" "nsg-web" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "80"
+    destination_port_ranges     = ["80", "22"]
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -96,7 +96,7 @@ resource "azurerm_network_security_group" "nsg-data" {
   resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
-    name                       = "Inbound_from_Sub-data"
+    name                       = "Inbound_from_Sub-app"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
@@ -201,6 +201,21 @@ resource "azurerm_lb_rule" "lb_rule" {
   probe_id                       = azurerm_lb_probe.health_probe_infra.id
 }
 
+resource "azurerm_lb_nat_rule" "nat_rule" {
+  name                           = var.lb_nat_rule
+  resource_group_name = azurerm_resource_group.rg.name
+  loadbalancer_id                = azurerm_lb.lb_infra.id
+  protocol                       = "Tcp"
+  frontend_port                  = 22
+  backend_port                   = 22
+  frontend_ip_configuration_name = "LoadBalancerFrontEnd"
+}
+
+resource "azurerm_network_interface_nat_rule_association" "nat_rule_association_vm" {
+  network_interface_id = azurerm_network_interface.nic-web.id
+  ip_configuration_name = "internal"
+  nat_rule_id = azurerm_lb_nat_rule.nat_rule.id
+}
 resource "azurerm_network_interface_backend_address_pool_association" "vm_pool" {
   network_interface_id    = azurerm_network_interface.nic-web.id
   ip_configuration_name   = "internal"
@@ -223,7 +238,7 @@ resource "azurerm_mssql_database" "infra_sql_database" {
 }
 
 resource "azurerm_private_dns_zone" "sql_dns" {
-  name                = "private.sql.database.azure.com"
+  name                = "privatelink.database.windows.net"
   resource_group_name = azurerm_resource_group.rg.name
 }
 

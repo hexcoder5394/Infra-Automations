@@ -95,3 +95,9 @@ variable "sql_private_endpoint" {
   default     = "sql_private_endpoint"
 }
 
+variable "lb_nat_rule" {
+  description = "lb_nat_rule"
+  type = string
+  default = "lb_nat_rule"
+}
+
